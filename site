@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+
+        /* Fundo xadrez animado - versão ultra fluida */
+        body::before {
+            content: "";
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                linear-gradient(45deg, 
+                    transparent 0%, 
+                    transparent 50%, 
+                    rgba(0,0,0,0.1) 50%, 
+                    rgba(0,0,0,0.1) 100%),
+                repeating-conic-gradient(
+                    #ef3e63 0% 25%, 
+                    #a61d47 0% 50%
+                );
+            background-size: 100px 100px, 100px 100px;
+            background-position: 0 0, 0 0;
+            z-index: -1;
+            opacity: 0.9;
+            animation: moveChess 12s linear infinite;
+            will-change: transform;
+        }
+
+        @keyframes moveChess {
+            0% { transform: translate(0, 0); }
+            10% { transform: translate(-10px, 10px); }
+            20% { transform: translate(-20px, 20px); }
+            30% { transform: translate(-30px, 30px); }
+            40% { transform: translate(-40px, 40px); }
+            50% { transform: translate(-50px, 50px); }
+            60% { transform: translate(-60px, 60px); }
+            70% { transform: translate(-70px, 70px); }
+            80% { transform: translate(-80px, 80px); }
+            90% { transform: translate(-90px, 90px); }
+            100% { transform: translate(-100px, 100px); }
+        }
+
+        .floating-controls {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background-color: rgba(40, 40, 40, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            width: 300px;
+            border: 1px solid #49faa2;
+            backdrop-filter: blur(6px);
+        }
+        
+        .floating-controls.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .add-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #49faa2;
+            color: #1a1a1a;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 101;
+        }
+        
+        .add-btn:hover {
+            transform: scale(1.1);
+            background-color: #5effb8;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #49faa2;
+        }
+        
+        input {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #49faa2;
+            background-color: rgba(40, 40, 40, 0.8);
+            color: #ffffff;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        
+        button.primary {
+            background-color: #49faa2;
+            color: #1a1a1a;
+        }
+        
+        button.danger {
+            background-color: #ff4d4d;
+            color: white;
+        }
+        
+        button.warning {
+            background-color: #ffcc4d;
+            color: #1a1a1a;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(40, 40, 40, 0.9);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+            border: 1px solid #49faa2;
+        }
+        
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(73, 250, 162, 0.3);
+            color: #ffffff;
+        }
+        
+        th {
+            background-color: rgba(50, 50, 50, 0.95);
+            font-size: 15px;
+            color: #49faa2;
+        }
+        
+        /* Gradiente de cores para as posições */
+        tr.position-1 {
+            background-color: rgba(73, 250, 162, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        tr.position-1::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                        rgba(73, 250, 162, 0) 0%, 
+                        rgba(73, 250, 162, 0.2) 50%, 
+                        rgba(73, 250, 162, 0) 100%);
+            animation: shine 3s infinite;
+            z-index: -1;
+        }
+        
+        tr.position-2 {
+            background-color: rgba(65, 220, 145, 0.3);
+        }
+        
+        tr.position-3 {
+            background-color: rgba(57, 190, 128, 0.3);
+        }
+        
+        tr.position-4 {
+            background-color: rgba(49, 160, 111, 0.3);
+        }
+        
+        tr.position-5 {
+            background-color: rgba(41, 130, 94, 0.3);
+        }
+        
+        /* Efeitos especiais para o primeiro colocado */
+        tr.position-1 td:first-child {
+            position: relative;
+        }
+        
+        tr.position-1 td:first-child::before {
+            content: "🥇";
+            margin-right: 10px;
+            animation: pulse 1.5s infinite;
+            display: inline-block;
+        }
+        
+        tr.position-1 td:nth-child(3) {
+            font-weight: bold;
+            color: #49faa2;
+            text-shadow: 0 0 5px rgba(73, 250, 162, 0.5);
+        }
+        
+        tr.position-2 td:first-child::before {
+            content: "🥈 ";
+        }
+        
+        tr.position-3 td:first-child::before {
+            content: "🥉 ";
+        }
+        
+        tr:hover {
+            background-color: rgba(60, 60, 60, 0.8);
+        }
+        
+        .points-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .points-control button {
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+
+        /* Efeito ON FIRE! aprimorado */
+        .on-fire {
+            display: inline-block;
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-left: 10px;
+            animation: bounce 0.5s infinite alternate, pulse-fire 1s infinite;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .on-fire::before {
+            content: "🔥";
+            position: absolute;
+            left: 0;
+            animation: flame 0.8s infinite alternate;
+        }
+        
+        @keyframes flame {
+            0% { transform: scale(1) rotate(-10deg); }
+            100% { transform: scale(1.2) rotate(10deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+        
+        @keyframes pulse-fire {
+            0% { text-shadow: 0 0 5px rgba(255, 107, 107, 0.5); }
+            50% { text-shadow: 0 0 15px rgba(255, 107, 107, 0.9); }
+            100% { text-shadow: 0 0 5px rgba(255, 107, 107, 0.5); }
+        }
+
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 5px 0px rgba(73, 250, 162, 0.3); }
+            50% { box-shadow: 0 0 15px 3px rgba(73, 250, 162, 0.7); }
+            100% { box-shadow: 0 0 5px 0px rgba(73, 250, 162, 0.3); }
+        }
+
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes moveUp {
+            from { transform: translateY(30px); opacity: 0.7; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes moveDown {
+            from { transform: translateY(-30px); opacity: 0.7; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes highlight {
+            0% { background-color: rgba(73, 250, 162, 0.25); }
+            100% { background-color: transparent; }
+        }
+
+        .highlight {
+            animation: highlight 1.5s ease-out;
+        }
+        
+        .moving-up {
+            animation: moveUp 0.6s ease-out;
+        }
+        
+        .moving-down {
+            animation: moveDown 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <table id="leaderboard">
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Nome</th>
+                <th>Pontuação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+            <!-- Os participantes serão adicionados aqui -->
+        </tbody>
+    </table>
+    
+    <div class="floating-controls" id="floatingControls">
+        <div class="input-group">
+            <label for="participantName">Nome do Participante:</label>
+            <input type="text" id="participantName" placeholder="Digite o nome">
+        </div>
+        <div class="input-group">
+            <label for="initialScore">Pontuação Inicial:</label>
+            <input type="number" id="initialScore" placeholder="0" value="0">
+        </div>
+        <div class="input-group">
+            <label for="pointsAmount">Pontos para Adicionar/Remover:</label>
+            <input type="number" id="pointsAmount" placeholder="1" value="1" min="1">
+        </div>
+        <button class="primary" onclick="addParticipant()">Adicionar</button>
+        <button class="danger" onclick="hideControls()">Cancelar</button>
+    </div>
+    
+    <button class="add-btn" id="addButton" onclick="toggleControls()">+</button>
+
+    <script>
+        let participants = [];
+        let pointsAmount = 1;
+        let previousState = [];
+        let playerStreaks = {}; // Rastreia sequências de pontos de cada jogador
+        let onFirePlayers = new Set(); // Armazena IDs dos jogadores "on fire"
+        
+        function toggleControls() {
+            const controls = document.getElementById('floatingControls');
+            controls.classList.toggle('active');
+        }
+        
+        function hideControls() {
+            const controls = document.getElementById('floatingControls');
+            controls.classList.remove('active');
+        }
+        
+        document.getElementById('pointsAmount').addEventListener('change', function() {
+            pointsAmount = parseInt(this.value) || 1;
+        });
+        
+        function addParticipant() {
+            const nameInput = document.getElementById('participantName');
+            const scoreInput = document.getElementById('initialScore');
+            
+            const name = nameInput.value.trim();
+            const score = parseInt(scoreInput.value) || 0;
+            
+            if (name === '') {
+                alert('Por favor, digite um nome para o participante.');
+                return;
+            }
+            
+            const newPlayer = {
+                name: name,
+                score: score,
+                id: Date.now()
+            };
+            
+            participants.push(newPlayer);
+            playerStreaks[newPlayer.id] = 0;
+            
+            updateLeaderboard(true);
+            hideControls();
+            
+            nameInput.value = '';
+            scoreInput.value = '0';
+        }
+        
+        function updateLeaderboard(shouldAnimateNew = false) {
+            const oldParticipants = [...participants];
+            const oldPositions = new Map(oldParticipants.map((p, i) => [p.id, i]));
+            
+            // Ordena por pontuação decrescente
+            participants.sort((a, b) => b.score - a.score);
+            
+            // Verifica diferença de 5 pontos entre o primeiro e os outros
+            if (participants.length > 1) {
+                const topScore = participants[0].score;
+                let shouldClearOnFire = false;
+                
+                // Verifica se o primeiro colocado tem 5 pontos de vantagem
+                for (let i = 1; i < participants.length; i++) {
+                    if (topScore - participants[i].score >= 5) {
+                        shouldClearOnFire = true;
+                        break;
+                    }
+                }
+                
+                if (shouldClearOnFire) {
+                    // Mantém apenas o primeiro colocado com ON FIRE
+                    const newOnFirePlayers = new Set();
+                    if (onFirePlayers.has(participants[0].id)) {
+                        newOnFirePlayers.add(participants[0].id);
+                    }
+                    onFirePlayers = newOnFirePlayers;
+                }
+            }
+            
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+            
+            participants.forEach((participant, newIndex) => {
+                const row = document.createElement('tr');
+                row.className = `position-${newIndex + 1}`;
+                
+                const oldIndex = oldPositions.get(participant.id);
+                if (oldIndex !== undefined && oldIndex !== newIndex) {
+                    row.classList.add(newIndex < oldIndex ? 'moving-up' : 'moving-down');
+                }
+                
+                if (shouldAnimateNew && newIndex === participants.length - 1) {
+                    row.classList.add('highlight');
+                }
+                
+                // Verifica se este jogador está "on fire"
+                const isOnFire = onFirePlayers.has(participant.id);
+                
+                row.innerHTML = `
+                    <td>${newIndex + 1}</td>
+                    <td>${participant.name}</td>
+                    <td>${participant.score}${isOnFire ? '<span class="on-fire">ON FIRE!</span>' : ''}</td>
+                    <td class="points-control">
+                        <button class="primary" onclick="changeScore(${participants.findIndex(p => p.id === participant.id)}, ${pointsAmount})">+${pointsAmount}</button>
+                        <button class="warning" onclick="changeScore(${participants.findIndex(p => p.id === participant.id)}, -${pointsAmount})">-${pointsAmount}</button>
+                        <button class="danger" onclick="removeParticipant(${participants.findIndex(p => p.id === participant.id)})">Remover</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function changeScore(index, change) {
+            const participant = participants[index];
+            participant.score += change;
+            
+            // Atualiza a sequência de pontos do jogador
+            if (change > 0) {
+                playerStreaks[participant.id] = (playerStreaks[participant.id] || 0) + 1;
+                
+                // Verifica se o jogador marcou 3 pontos seguidos
+                if (playerStreaks[participant.id] >= 3) {
+                    onFirePlayers.add(participant.id);
+                }
+            } else {
+                // Reseta a sequência se perder pontos
+                playerStreaks[participant.id] = 0;
+            }
+            
+            // Reseta as sequências de outros jogadores
+            for (const id in playerStreaks) {
+                if (id !== participant.id.toString()) {
+                    playerStreaks[id] = 0;
+                }
+            }
+            
+            updateLeaderboard();
+            
+            if (change > 0) {
+                const rows = document.querySelectorAll('#leaderboardBody tr');
+                rows.forEach(row => {
+                    if (row.textContent.includes(participant.name)) {
+                        row.classList.add('highlight');
+                        setTimeout(() => {
+                            row.classList.remove('highlight');
+                        }, 1500);
+                    }
+                });
+            }
+        }
+        
+        function removeParticipant(index) {
+            if (confirm(`Tem certeza que deseja remover ${participants[index].name}?`)) {
+                // Remove o jogador do registro de on fire
+                onFirePlayers.delete(participants[index].id);
+                delete playerStreaks[participants[index].id];
+                
+                participants.splice(index, 1);
+                updateLeaderboard();
+            }
+        }
+
+        // Versão somente leitura
+	if(!window.location.href.includes('edit=true')) {
+	  document.getElementById('addButton').style.display = 'none';
+	  document.querySelectorAll('.points-control button, .floating-controls').forEach(el => {
+ 	   el.style.display = 'none';
+ 	 });
+}
+    </script>
+</body>
+</html>
