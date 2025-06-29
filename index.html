@@ -17,7 +17,6 @@
             background-color: #1a1a1a;
         }
 
-        /* Fundo xadrez animado - versão ultra fluida */
         body::before {
             content: "";
             position: fixed;
@@ -45,15 +44,6 @@
 
         @keyframes moveChess {
             0% { transform: translate(0, 0); }
-            10% { transform: translate(-10px, 10px); }
-            20% { transform: translate(-20px, 20px); }
-            30% { transform: translate(-30px, 30px); }
-            40% { transform: translate(-40px, 40px); }
-            50% { transform: translate(-50px, 50px); }
-            60% { transform: translate(-60px, 60px); }
-            70% { transform: translate(-70px, 70px); }
-            80% { transform: translate(-80px, 80px); }
-            90% { transform: translate(-90px, 90px); }
             100% { transform: translate(-100px, 100px); }
         }
 
@@ -177,7 +167,6 @@
             color: #49faa2;
         }
         
-        /* Gradiente de cores para as posições */
         tr.position-1 {
             background-color: rgba(73, 250, 162, 0.3);
             position: relative;
@@ -215,7 +204,6 @@
             background-color: rgba(41, 130, 94, 0.3);
         }
         
-        /* Efeitos especiais para o primeiro colocado */
         tr.position-1 td:first-child {
             position: relative;
         }
@@ -257,7 +245,6 @@
             font-size: 13px;
         }
 
-        /* Efeito ON FIRE! aprimorado */
         .on-fire {
             display: inline-block;
             color: #ff6b6b;
@@ -345,6 +332,19 @@
         .moving-down {
             animation: moveDown 0.6s ease-out;
         }
+
+        .refresh-notice {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #49faa2;
+            color: #1a1a1a;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            animation: pulse-gold 2s infinite;
+        }
     </style>
 </head>
 <body>
@@ -385,8 +385,8 @@
         let participants = [];
         let pointsAmount = 1;
         let previousState = [];
-        let playerStreaks = {}; // Rastreia sequências de pontos de cada jogador
-        let onFirePlayers = new Set(); // Armazena IDs dos jogadores "on fire"
+        let playerStreaks = {};
+        let onFirePlayers = new Set();
         
         function toggleControls() {
             const controls = document.getElementById('floatingControls');
@@ -434,15 +434,12 @@
             const oldParticipants = [...participants];
             const oldPositions = new Map(oldParticipants.map((p, i) => [p.id, i]));
             
-            // Ordena por pontuação decrescente
             participants.sort((a, b) => b.score - a.score);
             
-            // Verifica diferença de 5 pontos entre o primeiro e os outros
             if (participants.length > 1) {
                 const topScore = participants[0].score;
                 let shouldClearOnFire = false;
                 
-                // Verifica se o primeiro colocado tem 5 pontos de vantagem
                 for (let i = 1; i < participants.length; i++) {
                     if (topScore - participants[i].score >= 5) {
                         shouldClearOnFire = true;
@@ -451,7 +448,6 @@
                 }
                 
                 if (shouldClearOnFire) {
-                    // Mantém apenas o primeiro colocado com ON FIRE
                     const newOnFirePlayers = new Set();
                     if (onFirePlayers.has(participants[0].id)) {
                         newOnFirePlayers.add(participants[0].id);
@@ -476,7 +472,6 @@
                     row.classList.add('highlight');
                 }
                 
-                // Verifica se este jogador está "on fire"
                 const isOnFire = onFirePlayers.has(participant.id);
                 
                 row.innerHTML = `
@@ -498,20 +493,16 @@
             const participant = participants[index];
             participant.score += change;
             
-            // Atualiza a sequência de pontos do jogador
             if (change > 0) {
                 playerStreaks[participant.id] = (playerStreaks[participant.id] || 0) + 1;
                 
-                // Verifica se o jogador marcou 3 pontos seguidos
                 if (playerStreaks[participant.id] >= 3) {
                     onFirePlayers.add(participant.id);
                 }
             } else {
-                // Reseta a sequência se perder pontos
                 playerStreaks[participant.id] = 0;
             }
             
-            // Reseta as sequências de outros jogadores
             for (const id in playerStreaks) {
                 if (id !== participant.id.toString()) {
                     playerStreaks[id] = 0;
@@ -535,7 +526,6 @@
         
         function removeParticipant(index) {
             if (confirm(`Tem certeza que deseja remover ${participants[index].name}?`)) {
-                // Remove o jogador do registro de on fire
                 onFirePlayers.delete(participants[index].id);
                 delete playerStreaks[participants[index].id];
                 
@@ -544,13 +534,35 @@
             }
         }
 
-        // Versão somente leitura
-	if(!window.location.href.includes('edit=true')) {
-	  document.getElementById('addButton').style.display = 'none';
-	  document.querySelectorAll('.points-control button, .floating-controls').forEach(el => {
- 	   el.style.display = 'none';
- 	 });
-}
+        // Modo somente leitura
+        if(window.location.href.includes('view=readonly')) {
+            document.getElementById('addButton').style.display = 'none';
+            document.querySelectorAll('.points-control button').forEach(btn => {
+                btn.style.display = 'none';
+            });
+        }
+
+        // =============================================
+        // ATUALIZAÇÃO AUTOMÁTICA A CADA 2 SEGUNDOS
+        // =============================================
+        function setupAutoRefresh() {
+            // Só ativa no modo de visualização
+            if (!window.location.href.includes('?edit=true')) {
+                // Atualiza a cada 2 segundos (2000 milissegundos)
+                setInterval(() => {
+                    window.location.reload();
+                }, 2000);
+                
+                // Adiciona aviso visual
+                const refreshNotice = document.createElement('div');
+                refreshNotice.className = 'refresh-notice';
+                refreshNotice.textContent = 'Atualizando a cada 2 segundos';
+                document.body.appendChild(refreshNotice);
+            }
+        }
+
+        // Inicia quando a página carrega
+        window.addEventListener('DOMContentLoaded', setupAutoRefresh);
     </script>
 </body>
 </html>
